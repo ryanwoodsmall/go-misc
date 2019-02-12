@@ -1,5 +1,11 @@
 #!/bin/bash
 
+#
+# build a static up-to-date go dist for a few platforms
+#
+# XXX - should this be "gobootstrap" for the the recipe name?
+#
+
 set -eu
 
 sname="${BASH_SOURCE[0]}"
