@@ -8,6 +8,10 @@
 # XXX - turn off debugging?
 # XXX - https://github.com/golang/go/issues/9344
 # XXX - get the dang size down...
+# XXX - -w in ldflags omits dwarf symbol table
+# XXX - -s in ldflags omits symbol table and debug information
+# XXX - enable cgo for final stage?
+# XXX - remove all of pkg/bootstrap?
 #
 
 set -eu
