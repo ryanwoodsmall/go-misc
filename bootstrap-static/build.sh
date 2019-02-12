@@ -106,6 +106,6 @@ for goarch in ${goarches[@]} ; do
 		rmdir bin/linux_${goarch}
 	fi
 	popd
-	tar -jcf "${cwtmp}/${goarchdir}.tar.bz2" "${goarchdir}/"
+	tar -zcf "${cwtmp}/${goarchdir}.tar.gz" "${goarchdir}/"
 done
 popd
