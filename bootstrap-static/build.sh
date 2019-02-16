@@ -24,7 +24,7 @@ if [[ ! $(uname -m) =~ x86_64 ]] ; then
 fi
 
 # prerequisite programs
-prereqs=( 'bzip2' 'curl' 'gcc' 'gzip' 'make' 'xz' )
+prereqs=( 'bzip2' 'curl' 'gcc' 'gzip' 'xz' )
 for prereq in ${prereqs[@]} ; do
 	if ! $(hash "${prereq}" >/dev/null 2>&1) ; then
 		echo "${sname}: ${prereq} not found"
