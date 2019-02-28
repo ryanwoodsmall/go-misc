@@ -11,7 +11,6 @@
 # XXX - -w in ldflags omits dwarf symbol table
 # XXX - -s in ldflags omits symbol table and debug information
 # XXX - enable cgo for final stage?
-# XXX - remove all of pkg/bootstrap?
 #
 
 set -eu
@@ -40,10 +39,10 @@ gobsdir="go${gobsver}"
 gobsfile="go${gobsver}.tar.gz"
 gobsfilesha256="f4ff5b5eb3a3cae1c993723f3eab519c5bae18866b5e5f96fe1102f0cb5c3e52"
 # go intermediate and final build verison
-gover="1.11.5"
+gover="1.12"
 godir="go${gover}"
 gofile="go${gover}.src.tar.gz"
-gofilesha256="bc1ef02bb1668835db1390a2e478dcbccb5dd16911691af9d75184bbe5aa943e"
+gofilesha256="2878faa22ad21f2c8bff98fef68a65ec38c91d48fd0dec7f9b0bf877843c4db0"
 # download
 gobaseurl="https://dl.google.com/go"
 gobsurl="${gobaseurl}/${gobsfile}"
@@ -110,9 +109,8 @@ for goarch in ${goarches[@]} ; do
 	popd
 	pushd "${goarchdir}"
 	rm -rf pkg/obj/go-build
+	rm -rf pkg/bootstrap
 	if [[ ! ${goarch} =~ amd64 ]] ; then
-		rm -rf pkg/bootstrap/bin
-		rm -rf pkg/bootstrap/pkg/linux_amd64
 		rm -rf pkg/tool/linux_amd64
 		rm -rf pkg/linux_amd64
 		rm -f bin/go{,fmt}
