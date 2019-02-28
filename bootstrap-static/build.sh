@@ -11,6 +11,8 @@
 # XXX - -w in ldflags omits dwarf symbol table
 # XXX - -s in ldflags omits symbol table and debug information
 # XXX - enable cgo for final stage?
+# XXX - bzip2 or xz this bad boy
+# XXX - include _${TIMESTAMP} in directory/archive?
 #
 
 set -eu
