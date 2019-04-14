@@ -41,10 +41,10 @@ gobsdir="go${gobsver}"
 gobsfile="go${gobsver}.tar.gz"
 gobsfilesha256="f4ff5b5eb3a3cae1c993723f3eab519c5bae18866b5e5f96fe1102f0cb5c3e52"
 # go intermediate and final build verison
-gover="1.12.2"
+gover="1.12.3"
 godir="go${gover}"
 gofile="go${gover}.src.tar.gz"
-gofilesha256="af992580a4a609309c734d46fd4374fe3095961263e609d9b017e2dffc3b7b58"
+gofilesha256="5c507abe8818429d74ebb650a4155d36bc3f9a725e59e76f5d6aca9690be2373"
 # download
 gobaseurl="https://dl.google.com/go"
 gobsurl="${gobaseurl}/${gobsfile}"
@@ -74,6 +74,7 @@ mkdir -p "${vartmp}"
 # download
 pushd "${godldir}"
 for url in "${gobsurl}" "${gourl}" ; do
+	echo "fetching ${url} in ${PWD}"
 	curl ${copts} "${url}"
 done
 popd
@@ -86,27 +87,33 @@ test -e "${gobsdir}" && rm -rf "${gobsdir}"
 tar -zxf "${godldir}/${gobsfile}"
 mv go "${gobsdir}"
 pushd "${gobsdir}/src/"
+echo "building stage1 go1.4 in ${PWD}"
 env GO_LDFLAGS='-extldflags "-static"' CGO_ENABLED=0 bash make.bash
 popd
+echo
 # stage 2: second stage bootstrap (go -> go)
 test -e go && rm -rf go
 test -e "${godir}" && rm -rf "${godir}"
 tar -zxf "${godldir}/${gofile}"
 mv go "${godir}"
 pushd "${godir}/src"
+echo "building stage2 go${gover} in ${PWD}"
 env GO_LDFLAGS='-extldflags "-static"' CGO_ENABLED=0 GOROOT_BOOTSTRAP="${cwbuild}/${gobsdir}" bash make.bash
 popd
 popd
+echo
 
 # final builds
 pushd "${rtdir}"
 for goarch in ${goarches[@]} ; do
 	goarchdir="${godir}-${goarch}"
+	goarchive="${cwtmp}/${goarchdir}.tar.gz"
 	test -e go && rm -rf go
 	test -e "${goarchdir}" && rm -rf "${goarchdir}"
 	tar -zxf "${godldir}/${gofile}"
 	mv go "${goarchdir}"
 	pushd "${goarchdir}/src/"
+	echo "building final go${gover} for ${goarch} in ${PWD}"
 	env GO_LDFLAGS='-extldflags "-static"' CGO_ENABLED=0 GOROOT_BOOTSTRAP="${cwbuild}/${godir}" GOOS='linux' GOARCH="${goarch}" bash make.bash
 	popd
 	pushd "${goarchdir}"
@@ -120,6 +127,9 @@ for goarch in ${goarches[@]} ; do
 		rmdir bin/linux_${goarch}
 	fi
 	popd
-	tar -zcf "${cwtmp}/${goarchdir}.tar.gz" "${goarchdir}/"
+	echo "archiving ${goarchdir} to ${goarchive}"
+	tar -zcf "${goarchive}" "${goarchdir}/"
+	echo
 done
 popd
+echo
