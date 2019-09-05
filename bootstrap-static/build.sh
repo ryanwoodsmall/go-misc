@@ -11,7 +11,7 @@
 # XXX - -w in ldflags omits dwarf symbol table
 # XXX - -s in ldflags omits symbol table and debug information
 # XXX - enable cgo for final stage?
-# XXX - bzip2 or xz this bad boy
+# XXX - xz this bad boy?
 # XXX - include _${TIMESTAMP} in directory/archive?
 #
 
@@ -41,10 +41,10 @@ gobsdir="go${gobsver}"
 gobsfile="go${gobsver}.tar.gz"
 gobsfilesha256="f4ff5b5eb3a3cae1c993723f3eab519c5bae18866b5e5f96fe1102f0cb5c3e52"
 # go intermediate and final build verison
-gover="1.12.9"
+gover="1.13"
 godir="go${gover}"
 gofile="go${gover}.src.tar.gz"
-gofilesha256="ab0e56ed9c4732a653ed22e232652709afbf573e710f56a07f7fdeca578d62fc"
+gofilesha256="3fc0b8b6101d42efd7da1da3029c0a13f22079c0c37ef9730209d8ec665bf122"
 # download
 gobaseurl="https://dl.google.com/go"
 gobsurl="${gobaseurl}/${gobsfile}"
@@ -108,7 +108,7 @@ echo
 pushd "${rtdir}"
 for goarch in ${goarches[@]} ; do
 	goarchdir="${godir}-${goarch}"
-	goarchive="${cwtmp}/${goarchdir}.tar.gz"
+	goarchive="${cwtmp}/${goarchdir}.tar.bz2"
 	test -e go && rm -rf go
 	test -e "${goarchdir}" && rm -rf "${goarchdir}"
 	tar -zxf "${godldir}/${gofile}"
@@ -129,7 +129,7 @@ for goarch in ${goarches[@]} ; do
 	fi
 	popd
 	echo "archiving ${goarchdir} to ${goarchive}"
-	tar -zcf "${goarchive}" "${goarchdir}/"
+	tar -jcf "${goarchive}" "${goarchdir}/"
 	echo
 done
 popd
