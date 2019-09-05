@@ -3,7 +3,9 @@
 #
 # build a static up-to-date go dist for a few platforms
 #
-# XXX - should this be "gobootstrap" for the the recipe name?
+
+#
+# XXX - rename to gostatic
 # XXX - enable strip with ldflags?
 # XXX - turn off debugging?
 # XXX - https://github.com/golang/go/issues/9344
