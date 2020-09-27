@@ -52,7 +52,7 @@ gobaseurl="https://dl.google.com/go"
 gobsurl="${gobaseurl}/${gobsfile}"
 gourl="${gobaseurl}/${gofile}"
 # architectures
-goarches=( '386' 'amd64' 'arm' 'arm64' )
+goarches=( '386' 'amd64' 'arm' 'arm64' 'riscv64' )
 # XXX - need an extra opts for GOARM=6 on arm, blank on everything else
 
 # crosware stuff - build bootstrap stages in tmp and install in software
