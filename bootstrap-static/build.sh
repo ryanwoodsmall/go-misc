@@ -15,6 +15,8 @@
 # XXX - enable cgo for final stage?
 # XXX - xz this bad boy?
 # XXX - include _${TIMESTAMP} in directory/archive?
+# XXX - need our custom certs referenced in src/crypto/x509/root_linux.go
+# XXX - look at using src/bootstrap.bash instead of custom
 #
 
 set -eu
