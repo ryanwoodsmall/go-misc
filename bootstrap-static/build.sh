@@ -45,10 +45,10 @@ gobsdir="go${gobsver}"
 gobsfile="go${gobsver}.tar.gz"
 gobsfilesha256="f4ff5b5eb3a3cae1c993723f3eab519c5bae18866b5e5f96fe1102f0cb5c3e52"
 # go intermediate and final build verison
-gover="1.16.1"
+gover="1.16.2"
 godir="go${gover}"
 gofile="go${gover}.src.tar.gz"
-gofilesha256="680a500cd8048750121677dd4dc055fdfd680ae83edc7ed60a4b927e466228eb"
+gofilesha256="37ca14287a23cb8ba2ac3f5c3dd8adbc1f7a54b9701a57824bf19a0b271f83ea"
 # download
 gobaseurl="https://dl.google.com/go"
 gobsurl="${gobaseurl}/${gobsfile}"
