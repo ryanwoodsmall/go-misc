@@ -15,7 +15,6 @@
 # XXX - enable cgo for final stage?
 # XXX - xz this bad boy?
 # XXX - include _${TIMESTAMP} in directory/archive?
-# XXX - need our custom certs referenced in src/crypto/x509/root_linux.go
 # XXX - look at using src/bootstrap.bash instead of custom
 #
 
@@ -45,10 +44,10 @@ gobsdir="go${gobsver}"
 gobsfile="go${gobsver}.tar.gz"
 gobsfilesha256="f4ff5b5eb3a3cae1c993723f3eab519c5bae18866b5e5f96fe1102f0cb5c3e52"
 # go intermediate and final build verison
-gover="1.16.4"
+gover="1.16.5"
 godir="go${gover}"
 gofile="go${gover}.src.tar.gz"
-gofilesha256="ae4f6b6e2a1677d31817984655a762074b5356da50fb58722b99104870d43503"
+gofilesha256="7bfa7e5908c7cc9e75da5ddf3066d7cbcf3fd9fa51945851325eebc17f50ba80"
 # download
 gobaseurl="https://dl.google.com/go"
 gobsurl="${gobaseurl}/${gobsfile}"
@@ -118,6 +117,12 @@ for goarch in ${goarches[@]} ; do
 	tar -zxf "${godldir}/${gofile}"
 	mv go "${goarchdir}"
 	pushd "${goarchdir}/src/"
+	echo "patching crypto/x509/root_linux.go with cert locations"
+	cat crypto/x509/root_linux.go > crypto/x509/root_linux.go.ORIG
+	sed -i 's|"/etc/ssl/cert.pem"|"/etc/ssl/cert.pem","'"${cwtop}/etc/ssl/cert.pem"'"|g' crypto/x509/root_linux.go
+	sed -i 's|"/etc/ssl/certs"|"/etc/ssl/certs","'"${cwtop}/etc/ssl/certs"'"|g' crypto/x509/root_linux.go
+	"${cwbuild}/${godir}/bin/gofmt" -w crypto/x509/root_linux.go
+	#diff -Naur crypto/x509/root_linux.go{.ORIG,} || true
 	echo "building final go${gover} for ${goarch} in ${PWD}"
 	env GO_LDFLAGS='-extldflags "-static"' CGO_ENABLED=0 GOROOT_BOOTSTRAP="${cwbuild}/${godir}" GOOS='linux' GOARCH="${goarch}" bash make.bash
 	popd
