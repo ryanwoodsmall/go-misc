@@ -144,7 +144,7 @@ for goarch in ${goarches[@]} ; do
 	rm -f "${goarchive}.xz"
 	xz --threads=$(nproc) -e -v -v "${goarchive}"
 	echo "storing SHA-256 sum to ${goarchive}.xz.sha256"
-	sha256sum "${goarchive}.xz" > "${goarchive}.xz.sha256"
+	sha256sum "$(basename ${goarchive}.xz)" > "${goarchive}.xz.sha256"
 	popd
 	echo
 done
