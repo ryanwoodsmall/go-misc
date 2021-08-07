@@ -5,15 +5,10 @@
 #
 
 #
-# XXX - rename to gostatic
-# XXX - enable strip with ldflags?
+# XXX - rename to gostatic?
 # XXX - turn off debugging?
 # XXX - https://github.com/golang/go/issues/9344
-# XXX - get the dang size down...
-# XXX - -w in ldflags omits dwarf symbol table
-# XXX - -s in ldflags omits symbol table and debug information
 # XXX - enable cgo for final stage?
-# XXX - xz this bad boy?
 # XXX - include _${TIMESTAMP} in directory/archive?
 # XXX - look at using src/bootstrap.bash instead of custom
 #
@@ -28,7 +23,7 @@ if [[ ! $(uname -m) =~ x86_64 ]] ; then
 fi
 
 # prerequisite programs
-prereqs=( 'bzip2' 'curl' 'gcc' 'gzip' 'xz' )
+prereqs=( 'curl' 'gcc' 'gzip' 'nproc' 'tar' 'xz' )
 for prereq in ${prereqs[@]} ; do
 	if ! $(hash "${prereq}" >/dev/null 2>&1) ; then
 		echo "${sname}: ${prereq} not found"
@@ -37,6 +32,11 @@ for prereq in ${prereqs[@]} ; do
 done
 # curl options
 copts="-k -L -O"
+# check for real xz, not busybox
+if ! `xz --version 2>&1 | grep -qi 'xz utils'` ; then
+	echo "${sname}: please install xz"
+	exit 2
+fi
 
 # bootstrap go version in C
 gobsver="1.4-bootstrap-20171003"
@@ -44,10 +44,10 @@ gobsdir="go${gobsver}"
 gobsfile="go${gobsver}.tar.gz"
 gobsfilesha256="f4ff5b5eb3a3cae1c993723f3eab519c5bae18866b5e5f96fe1102f0cb5c3e52"
 # go intermediate and final build verison
-gover="1.16.6"
+gover="1.16.7"
 godir="go${gover}"
 gofile="go${gover}.src.tar.gz"
-gofilesha256="a3a5d4bc401b51db065e4f93b523347a4d343ae0c0b08a65c3423b05a138037d"
+gofilesha256="1a9f2894d3d878729f7045072f30becebe243524cf2fce4e0a7b248b1e0654ac"
 # download
 gobaseurl="https://dl.google.com/go"
 gobsurl="${gobaseurl}/${gobsfile}"
@@ -92,7 +92,7 @@ tar -zxf "${godldir}/${gobsfile}"
 mv go "${gobsdir}"
 pushd "${gobsdir}/src/"
 echo "building stage1 go1.4 in ${PWD}"
-env GO_LDFLAGS='-extldflags "-static"' CGO_ENABLED=0 bash make.bash
+env GO_LDFLAGS='-extldflags "-static -s" -s -w' CGO_ENABLED=0 bash make.bash
 popd
 echo
 # stage 2: second stage bootstrap (go -> go)
@@ -102,7 +102,7 @@ tar -zxf "${godldir}/${gofile}"
 mv go "${godir}"
 pushd "${godir}/src"
 echo "building stage2 go${gover} in ${PWD}"
-env GO_LDFLAGS='-extldflags "-static"' CGO_ENABLED=0 GOROOT_BOOTSTRAP="${cwbuild}/${gobsdir}" bash make.bash
+env GO_LDFLAGS='-extldflags "-static -s" -s -w' CGO_ENABLED=0 GOROOT_BOOTSTRAP="${cwbuild}/${gobsdir}" bash make.bash
 popd
 popd
 echo
@@ -111,7 +111,7 @@ echo
 pushd "${rtdir}"
 for goarch in ${goarches[@]} ; do
 	goarchdir="${godir}-${goarch}"
-	goarchive="${cwtmp}/${goarchdir}.tar.bz2"
+	goarchive="${cwtmp}/${goarchdir}.tar"
 	test -e go && rm -rf go
 	test -e "${goarchdir}" && rm -rf "${goarchdir}"
 	tar -zxf "${godldir}/${gofile}"
@@ -124,7 +124,7 @@ for goarch in ${goarches[@]} ; do
 	"${cwbuild}/${godir}/bin/gofmt" -w crypto/x509/root_linux.go
 	#diff -Naur crypto/x509/root_linux.go{.ORIG,} || true
 	echo "building final go${gover} for ${goarch} in ${PWD}"
-	env GO_LDFLAGS='-extldflags "-static"' CGO_ENABLED=0 GOROOT_BOOTSTRAP="${cwbuild}/${godir}" GOOS='linux' GOARCH="${goarch}" bash make.bash
+	env GO_LDFLAGS='-extldflags "-static -s" -s -w' CGO_ENABLED=0 GOROOT_BOOTSTRAP="${cwbuild}/${godir}" GOOS='linux' GOARCH="${goarch}" bash make.bash
 	popd
 	pushd "${goarchdir}"
 	rm -rf pkg/obj/go-build
@@ -138,7 +138,14 @@ for goarch in ${goarches[@]} ; do
 	fi
 	popd
 	echo "archiving ${goarchdir} to ${goarchive}"
-	tar -jcf "${goarchive}" "${goarchdir}/"
+	tar -cf "${goarchive}" "${goarchdir}/"
+	pushd "$(dirname ${goarchive})"
+	echo "using xz to compress ${goarchive} in ${PWD}"
+	rm -f "${goarchive}.xz"
+	xz --threads=$(nproc) -e -v -v "${goarchive}"
+	echo "storing SHA-256 sum to ${goarchive}.xz.sha256"
+	sha256sum "${goarchive}.xz" > "${goarchive}.xz.sha256"
+	popd
 	echo
 done
 popd
