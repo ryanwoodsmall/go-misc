@@ -11,6 +11,7 @@
 # XXX - enable cgo for final stage?
 # XXX - include _${TIMESTAMP} in directory/archive?
 # XXX - look at using src/bootstrap.bash instead of custom
+# XXX - include curl cert.pem in ${cwsw}/go/current/etc/ssl/cert.pem as fallback?
 #
 
 set -eu
