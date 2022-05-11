@@ -45,10 +45,10 @@ gobsdir="go${gobsver}"
 gobsfile="go${gobsver}.tar.gz"
 gobsfilesha256="f4ff5b5eb3a3cae1c993723f3eab519c5bae18866b5e5f96fe1102f0cb5c3e52"
 # go intermediate and final build verison
-gover="1.17.9"
+: ${gover:="1.17.10"}
+: ${gofilesha256:="299e55af30f15691b015d8dcf8ecae72412412569e5b2ece20361753a456f2f9"}
 godir="go${gover}"
 gofile="go${gover}.src.tar.gz"
-gofilesha256="763ad4bafb80a9204458c5fa2b8e7327fa971aee454252c0e362c11236156813"
 # download
 gobaseurl="https://dl.google.com/go"
 gobsurl="${gobaseurl}/${gobsfile}"
@@ -63,7 +63,7 @@ cwbuild="${cwtop}/builds"
 cwdl="${cwtop}/downloads"
 cwtmp="${cwtop}/tmp"
 cwsw="${cwtop}/software"
-rtdir="${cwsw}/go"
+: ${rtdir:="${cwsw}/go"}
 
 # random
 godldir="${cwdl}/go"
