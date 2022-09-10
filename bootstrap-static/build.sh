@@ -19,7 +19,7 @@ set -eu
 sname="${BASH_SOURCE[0]}"
 
 if [[ ! $(uname -m) =~ x86_64 ]] ; then
-	echo "${sname}: please run on amd64 (for now)"
+	echo "${sname}: please run on amd64 (for now)" 1>&2
 	exit 1
 fi
 
@@ -27,7 +27,7 @@ fi
 prereqs=( 'curl' 'gcc' 'gzip' 'nproc' 'tar' 'xz' )
 for prereq in ${prereqs[@]} ; do
 	if ! $(hash "${prereq}" >/dev/null 2>&1) ; then
-		echo "${sname}: ${prereq} not found"
+		echo "${sname}: ${prereq} not found" 1>&2
 		exit 1
 	fi
 done
@@ -35,7 +35,7 @@ done
 copts="-k -L -O"
 # check for real xz, not busybox
 if ! `xz --version 2>&1 | grep -qi 'xz utils'` ; then
-	echo "${sname}: please install xz"
+	echo "${sname}: please install xz" 1>&2
 	exit 2
 fi
 
@@ -45,11 +45,11 @@ gobsdir="go${gobsver}"
 gobsfile="go${gobsver}.tar.gz"
 gobsfilesha256="f4ff5b5eb3a3cae1c993723f3eab519c5bae18866b5e5f96fe1102f0cb5c3e52"
 # go intermediate and final build verison
-: ${gover:="1.19"}
+: ${gover:="1.19.1"}
 gomajver="${gover%%.*}"
 gominver="${gover#*.}"
 gominver="${gominver%%.*}"
-: ${gofilesha256:="9419cc70dc5a2523f29a77053cafff658ed21ef3561d9b6b020280ebceab28b9"}
+: ${gofilesha256:="27871baa490f3401414ad793fba49086f6c855b1c584385ed7771e1204c7e179"}
 godir="go${gover}"
 gofile="go${gover}.src.tar.gz"
 # download
@@ -72,6 +72,17 @@ cwsw="${cwtop}/software"
 godldir="${cwdl}/go"
 vartmp="/var/tmp"
 
+# XXX - tb="++++$(echo ${@} | sed 's/./,/g')"
+function boxecho() {
+  local len="$(($(echo -n ${@} | wc -c)+4))"
+  local i=0
+  for i in $(seq 1 ${len}) ; do echo -n "+" ; done
+  echo
+  echo "+ ${@} +"
+  for i in $(seq 1 ${len}) ; do echo -n "+" ; done
+  echo
+}
+
 # create build/install directories
 mkdir -p "${cwbuild}"
 mkdir -p "${cwtmp}"
@@ -82,7 +93,7 @@ mkdir -p "${vartmp}"
 # download
 pushd "${godldir}"
 for url in "${gobsurl}" "${gourl}" ; do
-	echo "fetching ${url} in ${PWD}"
+	boxecho "fetching ${url} in ${PWD}"
 	curl ${copts} "${url}"
 done
 popd
@@ -95,7 +106,7 @@ test -e "${gobsdir}" && rm -rf "${gobsdir}"
 tar -zxf "${godldir}/${gobsfile}"
 mv go "${gobsdir}"
 pushd "${gobsdir}/src/"
-echo "building stage1 go1.4 in ${PWD}"
+boxecho "building stage1 go1.4 in ${PWD}"
 env GO_LDFLAGS='-extldflags "-static -s" -s -w' CGO_ENABLED=0 bash make.bash
 popd
 echo
@@ -105,7 +116,7 @@ test -e "${godir}" && rm -rf "${godir}"
 tar -zxf "${godldir}/${gofile}"
 mv go "${godir}"
 pushd "${godir}/src"
-echo "building stage2 go${gover} in ${PWD}"
+boxecho "building stage2 go${gover} in ${PWD}"
 env GO_LDFLAGS='-extldflags "-static -s" -s -w' CGO_ENABLED=0 GOROOT_BOOTSTRAP="${cwbuild}/${gobsdir}" bash make.bash
 popd
 popd
@@ -121,13 +132,13 @@ for goarch in ${goarches[@]} ; do
 	tar -zxf "${godldir}/${gofile}"
 	mv go "${goarchdir}"
 	pushd "${goarchdir}/src/"
-	echo "patching crypto/x509/root_linux.go with cert locations"
+	boxecho "patching crypto/x509/root_linux.go with cert locations"
 	cat crypto/x509/root_linux.go > crypto/x509/root_linux.go.ORIG
 	sed -i 's|"/etc/ssl/cert.pem"|"/etc/ssl/cert.pem","'"${cwtop}/etc/ssl/cert.pem"'"|g' crypto/x509/root_linux.go
 	sed -i 's|"/etc/ssl/certs"|"/etc/ssl/certs","'"${cwtop}/etc/ssl/certs"'"|g' crypto/x509/root_linux.go
 	"${cwbuild}/${godir}/bin/gofmt" -w crypto/x509/root_linux.go
 	#diff -Naur crypto/x509/root_linux.go{.ORIG,} || true
-	echo "building final go${gover} for ${goarch} in ${PWD}"
+	boxecho "building final go${gover} for ${goarch} in ${PWD}"
 	env GO_LDFLAGS='-extldflags "-static -s" -s -w' CGO_ENABLED=0 GOROOT_BOOTSTRAP="${cwbuild}/${godir}" GOOS='linux' GOARCH="${goarch}" bash make.bash
 	popd
 	pushd "${goarchdir}"
@@ -141,6 +152,7 @@ for goarch in ${goarches[@]} ; do
 		rmdir bin/linux_${goarch}
 	fi
 	popd
+	boxecho "successfully built go${gover} for ${goarch}"
 	echo "archiving ${goarchdir} to ${goarchive}"
 	tar -cf "${goarchive}" "${goarchdir}/"
 	pushd "$(dirname ${goarchive})"
