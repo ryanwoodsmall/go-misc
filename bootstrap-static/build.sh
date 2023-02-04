@@ -12,6 +12,7 @@
 # XXX - include _${TIMESTAMP} in directory/archive?
 # XXX - look at using src/bootstrap.bash instead of custom
 # XXX - include curl cert.pem in ${cwsw}/go/current/etc/ssl/cert.pem as fallback?
+# XXX - go 1.20+ bootstrap requires go 1.17.3+ - see: https://go.dev/doc/go1.20#bootstrap
 #
 
 set -eu
@@ -31,31 +32,43 @@ for prereq in ${prereqs[@]} ; do
 		exit 1
 	fi
 done
+
 # curl options
 copts="-k -L -O"
+
 # check for real xz, not busybox
 if ! `xz --version 2>&1 | grep -qi 'xz utils'` ; then
 	echo "${sname}: please install xz" 1>&2
 	exit 2
 fi
 
-# bootstrap go version in C
-gobsver="1.4-bootstrap-20171003"
-gobsdir="go${gobsver}"
-gobsfile="go${gobsver}.tar.gz"
-gobsfilesha256="f4ff5b5eb3a3cae1c993723f3eab519c5bae18866b5e5f96fe1102f0cb5c3e52"
+# bootstrap go stage 0 version in C
+gobs0ver="1.4-bootstrap-20171003"
+gobs0dir="go${gobs0ver}"
+gobs0file="go${gobs0ver}.tar.gz"
+gobs0filesha256="f4ff5b5eb3a3cae1c993723f3eab519c5bae18866b5e5f96fe1102f0cb5c3e52"
+
+# go stage 1 bootstrap 1.17+ for go 1.20+
+gobs1ver="1.19.5"
+gobs1dir="go${gobs1ver}"
+gobs1file="go${gobs1ver}.src.tar.gz"
+gobs1filesha256="8e486e8e85a281fc5ce3f0bedc5b9d2dbf6276d7db0b25d3ec034f313da0375f"
+
 # go intermediate and final build verison
-: ${gover:="1.19.5"}
+: ${gover:="1.20"}
 gomajver="${gover%%.*}"
 gominver="${gover#*.}"
 gominver="${gominver%%.*}"
-: ${gofilesha256:="8e486e8e85a281fc5ce3f0bedc5b9d2dbf6276d7db0b25d3ec034f313da0375f"}
+: ${gofilesha256:="3a29ff0421beaf6329292b8a46311c9fbf06c800077ceddef5fb7f8d5b1ace33"}
 godir="go${gover}"
 gofile="go${gover}.src.tar.gz"
+
 # download
 gobaseurl="https://dl.google.com/go"
-gobsurl="${gobaseurl}/${gobsfile}"
+gobs0url="${gobaseurl}/${gobs0file}"
+gobs1url="${gobaseurl}/${gobs1file}"
 gourl="${gobaseurl}/${gofile}"
+
 # architectures
 goarches=( '386' 'amd64' 'arm' 'arm64' 'riscv64' )
 # XXX - need an extra opts for GOARM=6 on arm, blank on everything else
@@ -92,7 +105,7 @@ mkdir -p "${vartmp}"
 
 # download
 pushd "${godldir}"
-for url in "${gobsurl}" "${gourl}" ; do
+for url in "${gobs0url}" "${gobs1url}" "${gourl}" ; do
 	boxecho "fetching ${url} in ${PWD}"
 	curl ${copts} "${url}"
 done
@@ -100,25 +113,39 @@ popd
 
 # bootstrap
 pushd "${cwbuild}"
-# stage 1: 1.4 (in C)
+
+# stage 0: 1.4 (in C)
 test -e go && rm -rf go
-test -e "${gobsdir}" && rm -rf "${gobsdir}"
-tar -zxf "${godldir}/${gobsfile}"
-mv go "${gobsdir}"
-pushd "${gobsdir}/src/"
-boxecho "building stage1 go1.4 in ${PWD}"
+test -e "${gobs0dir}" && rm -rf "${gobs0dir}"
+tar -zxf "${godldir}/${gobs0file}"
+mv go "${gobs0dir}"
+pushd "${gobs0dir}/src/"
+boxecho "building stage0 go${gobs0ver} in ${PWD}"
 env GO_LDFLAGS='-extldflags "-static -s" -s -w' CGO_ENABLED=0 bash make.bash
 popd
 echo
-# stage 2: second stage bootstrap (go -> go)
+
+# stage 1: second stage bootstrap (go -> go 1.17+)
+test -e go && rm -rf go
+test -e "${gobs1dir}" && rm -rf "${gobs1dir}"
+tar -zxf "${godldir}/${gobs1file}"
+mv go "${gobs1dir}"
+pushd "${gobs1dir}/src/"
+boxecho "building stage1 go${gobs1ver} in ${PWD}"
+env GO_LDFLAGS='-extldflags "-static -s" -s -w' CGO_ENABLED=0 GOROOT_BOOTSTRAP="${cwbuild}/${gobs0dir}" bash make.bash
+popd
+echo
+
+# stage 2: third stage bootstrap (go 1.17+ -> go 1.20+)
 test -e go && rm -rf go
 test -e "${godir}" && rm -rf "${godir}"
 tar -zxf "${godldir}/${gofile}"
 mv go "${godir}"
-pushd "${godir}/src"
+pushd "${godir}/src/"
 boxecho "building stage2 go${gover} in ${PWD}"
-env GO_LDFLAGS='-extldflags "-static -s" -s -w' CGO_ENABLED=0 GOROOT_BOOTSTRAP="${cwbuild}/${gobsdir}" bash make.bash
+env GO_LDFLAGS='-extldflags "-static -s" -s -w' CGO_ENABLED=0 GOROOT_BOOTSTRAP="${cwbuild}/${gobs1dir}" bash make.bash
 popd
+
 popd
 echo
 
