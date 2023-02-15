@@ -49,17 +49,17 @@ gobs0file="go${gobs0ver}.tar.gz"
 gobs0filesha256="f4ff5b5eb3a3cae1c993723f3eab519c5bae18866b5e5f96fe1102f0cb5c3e52"
 
 # go stage 1 bootstrap 1.17+ for go 1.20+
-gobs1ver="1.19.5"
+gobs1ver="1.19.6"
 gobs1dir="go${gobs1ver}"
 gobs1file="go${gobs1ver}.src.tar.gz"
-gobs1filesha256="8e486e8e85a281fc5ce3f0bedc5b9d2dbf6276d7db0b25d3ec034f313da0375f"
+gobs1filesha256="d7f0013f82e6d7f862cc6cb5c8cdb48eef5f2e239b35baa97e2f1a7466043767"
 
 # go intermediate and final build verison
-: ${gover:="1.20"}
+: ${gover:="1.20.1"}
 gomajver="${gover%%.*}"
 gominver="${gover#*.}"
 gominver="${gominver%%.*}"
-: ${gofilesha256:="3a29ff0421beaf6329292b8a46311c9fbf06c800077ceddef5fb7f8d5b1ace33"}
+: ${gofilesha256:="b5c1a3af52c385a6d1c76aed5361cf26459023980d0320de7658bae3915831a2"}
 godir="go${gover}"
 gofile="go${gover}.src.tar.gz"
 
