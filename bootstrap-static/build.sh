@@ -55,11 +55,11 @@ gobs1file="go${gobs1ver}.src.tar.gz"
 gobs1filesha256="d7f0013f82e6d7f862cc6cb5c8cdb48eef5f2e239b35baa97e2f1a7466043767"
 
 # go intermediate and final build verison
-: ${gover:="1.20.4"}
+: ${gover:="1.20.5"}
 gomajver="${gover%%.*}"
 gominver="${gover#*.}"
 gominver="${gominver%%.*}"
-: ${gofilesha256:="9f34ace128764b7a3a4b238b805856cc1b2184304df9e5690825b0710f4202d6"}
+: ${gofilesha256:="9a15c133ba2cfafe79652f4815b62e7cfc267f68df1b9454c6ab2a3ca8b96a88"}
 godir="go${gover}"
 gofile="go${gover}.src.tar.gz"
 
