@@ -13,6 +13,7 @@
 # XXX - look at using src/bootstrap.bash instead of custom
 # XXX - include curl cert.pem in ${cwsw}/go/current/etc/ssl/cert.pem as fallback?
 # XXX - go 1.20+ bootstrap requires go 1.17.3+ - see: https://go.dev/doc/go1.20#bootstrap
+# XXX - should probably actually check the SHA-256 sum instead of just... not
 #
 
 set -eu
@@ -55,11 +56,11 @@ gobs1file="go${gobs1ver}.src.tar.gz"
 gobs1filesha256="d7f0013f82e6d7f862cc6cb5c8cdb48eef5f2e239b35baa97e2f1a7466043767"
 
 # go intermediate and final build verison
-: ${gover:="1.20.5"}
+: ${gover:="1.20.6"}
 gomajver="${gover%%.*}"
 gominver="${gover#*.}"
 gominver="${gominver%%.*}"
-: ${gofilesha256:="9a15c133ba2cfafe79652f4815b62e7cfc267f68df1b9454c6ab2a3ca8b96a88"}
+: ${gofilesha256:="62ee5bc6fb55b8bae8f705e0cb8df86d6453626b4ecf93279e2867092e0b7f70"}
 godir="go${gover}"
 gofile="go${gover}.src.tar.gz"
 
