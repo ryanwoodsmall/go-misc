@@ -14,6 +14,8 @@
 # XXX - include curl cert.pem in ${cwsw}/go/current/etc/ssl/cert.pem as fallback?
 # XXX - go 1.20+ bootstrap requires go 1.17.3+ - see: https://go.dev/doc/go1.20#bootstrap
 # XXX - should probably actually check the SHA-256 sum instead of just... not
+# XXX - convert to using arrays/hashes with actual functions - arbitrary # of steps, 0->1->...->n
+# XXX - at some point it'll be go 1.4->1.17.3+->1.2x.x->1.3x.x(?)->2.x.x, would be good to be prepared
 #
 
 set -eu
@@ -50,17 +52,17 @@ gobs0file="go${gobs0ver}.tar.gz"
 gobs0filesha256="f4ff5b5eb3a3cae1c993723f3eab519c5bae18866b5e5f96fe1102f0cb5c3e52"
 
 # go stage 1 bootstrap 1.17+ for go 1.20+
-gobs1ver="1.19.6"
+gobs1ver="1.19.12"
 gobs1dir="go${gobs1ver}"
 gobs1file="go${gobs1ver}.src.tar.gz"
-gobs1filesha256="d7f0013f82e6d7f862cc6cb5c8cdb48eef5f2e239b35baa97e2f1a7466043767"
+gobs1filesha256="ee5d50e0a7fd74ba1b137cb879609aaaef9880bf72b5d1742100e38ae72bb557"
 
 # go intermediate and final build verison
-: ${gover:="1.20.6"}
+: ${gover:="1.21.0"}
 gomajver="${gover%%.*}"
 gominver="${gover#*.}"
 gominver="${gominver%%.*}"
-: ${gofilesha256:="62ee5bc6fb55b8bae8f705e0cb8df86d6453626b4ecf93279e2867092e0b7f70"}
+: ${gofilesha256:="818d46ede85682dd551ad378ef37a4d247006f12ec59b5b755601d2ce114369a"}
 godir="go${gover}"
 gofile="go${gover}.src.tar.gz"
 
