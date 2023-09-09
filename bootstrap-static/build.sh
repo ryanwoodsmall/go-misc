@@ -13,8 +13,8 @@
 # XXX - look at using src/bootstrap.bash instead of custom
 # XXX - include curl cert.pem in ${cwsw}/go/current/etc/ssl/cert.pem as fallback?
 # XXX - go 1.20+ bootstrap requires go 1.17.3+ - see: https://go.dev/doc/go1.20#bootstrap
-# XXX - should probably actually check the SHA-256 sum instead of just... not
 # XXX - convert to using arrays/hashes with actual functions - arbitrary # of steps, 0->1->...->n
+# XXX - this downloads _every_ time, need to... not do that?
 # XXX - at some point it'll be go 1.4->1.17.3+->1.2x.x->1.3x.x(?)->2.x.x, would be good to be prepared
 #
 
@@ -45,26 +45,32 @@ if ! `xz --version 2>&1 | grep -qi 'xz utils'` ; then
 	exit 2
 fi
 
+# checksums
+declare -A gofilesha256sums
+
 # bootstrap go stage 0 version in C
 gobs0ver="1.4-bootstrap-20171003"
 gobs0dir="go${gobs0ver}"
 gobs0file="go${gobs0ver}.tar.gz"
 gobs0filesha256="f4ff5b5eb3a3cae1c993723f3eab519c5bae18866b5e5f96fe1102f0cb5c3e52"
+gofilesha256sums["${gobs0file}"]="${gobs0filesha256}"
 
 # go stage 1 bootstrap 1.17+ for go 1.20+
 gobs1ver="1.19.12"
 gobs1dir="go${gobs1ver}"
 gobs1file="go${gobs1ver}.src.tar.gz"
 gobs1filesha256="ee5d50e0a7fd74ba1b137cb879609aaaef9880bf72b5d1742100e38ae72bb557"
+gofilesha256sums["${gobs1file}"]="${gobs1filesha256}"
 
 # go intermediate and final build verison
-: ${gover:="1.21.0"}
+: ${gover:="1.21.1"}
 gomajver="${gover%%.*}"
 gominver="${gover#*.}"
 gominver="${gominver%%.*}"
-: ${gofilesha256:="818d46ede85682dd551ad378ef37a4d247006f12ec59b5b755601d2ce114369a"}
+: ${gofilesha256:="bfa36bf75e9a1e9cbbdb9abcf9d1707e479bd3a07880a8ae3564caee5711cb99"}
 godir="go${gover}"
 gofile="go${gover}.src.tar.gz"
+gofilesha256sums["${gofile}"]="${gofilesha256}"
 
 # download
 gobaseurl="https://dl.google.com/go"
@@ -111,6 +117,14 @@ pushd "${godldir}"
 for url in "${gobs0url}" "${gobs1url}" "${gourl}" ; do
 	boxecho "fetching ${url} in ${PWD}"
 	curl ${copts} "${url}"
+done
+
+# checksum
+for k in ${!gofilesha256sums[@]} ; do
+  sha256sum "${k}" | awk '{print $1}' | grep -q "^${gofilesha256sums[${k}]}$" || {
+    echo "${k} SHA-256 sum mismatch" 1>&2
+    exit 1
+  }
 done
 popd
 
