@@ -1,5 +1,4 @@
 #!/bin/bash
-
 #
 # build a static up-to-date go dist for a few platforms
 #
@@ -62,12 +61,19 @@ gobs1file="go${gobs1ver}.src.tar.gz"
 gobs1filesha256="ccf36b53fb0024a017353c3ddb22c1f00bc7a8073c6aac79042da24ee34434d3"
 gofilesha256sums["${gobs1file}"]="${gobs1filesha256}"
 
+# go stage 2 bootstrap 1.17+ for go 1.20+
+gobs2ver="1.21.7"
+gobs2dir="go${gobs2ver}"
+gobs2file="go${gobs2ver}.src.tar.gz"
+gobs2filesha256="00197ab20f33813832bff62fd93cca1c42a08cc689a32a6672ca49591959bff6"
+gofilesha256sums["${gobs2file}"]="${gobs2filesha256}"
+
 # go intermediate and final build verison
-: ${gover:="1.21.7"}
+: ${gover:="1.22.0"}
 gomajver="${gover%%.*}"
 gominver="${gover#*.}"
 gominver="${gominver%%.*}"
-: ${gofilesha256:="00197ab20f33813832bff62fd93cca1c42a08cc689a32a6672ca49591959bff6"}
+: ${gofilesha256:="4d196c3d41a0d6c1dfc64d04e3cc1f608b0c436bd87b7060ce3e23234e1f4d5c"}
 godir="go${gover}"
 gofile="go${gover}.src.tar.gz"
 gofilesha256sums["${gofile}"]="${gofilesha256}"
@@ -76,6 +82,7 @@ gofilesha256sums["${gofile}"]="${gofilesha256}"
 gobaseurl="https://dl.google.com/go"
 gobs0url="${gobaseurl}/${gobs0file}"
 gobs1url="${gobaseurl}/${gobs1file}"
+gobs2url="${gobaseurl}/${gobs2file}"
 gourl="${gobaseurl}/${gofile}"
 
 # architectures
@@ -114,7 +121,7 @@ mkdir -p "${vartmp}"
 
 # download
 pushd "${godldir}"
-for url in "${gobs0url}" "${gobs1url}" "${gourl}" ; do
+for url in "${gobs0url}" "${gobs1url}" "${gobs2url}" "${gourl}" ; do
 	boxecho "fetching ${url} in ${PWD}"
 	curl ${copts} "${url}"
 done
@@ -155,12 +162,23 @@ echo
 
 # stage 2: third stage bootstrap (go 1.17+ -> go 1.20+)
 test -e go && rm -rf go
+test -e "${gobs2dir}" && rm -rf "${gobs2dir}"
+tar -zxf "${godldir}/${gobs2file}"
+mv go "${gobs2dir}"
+pushd "${gobs2dir}/src/"
+boxecho "building stage2 go${gobs2ver} in ${PWD}"
+env GO_LDFLAGS='-extldflags "-static -s" -s -w' CGO_ENABLED=0 GOROOT_BOOTSTRAP="${cwbuild}/${gobs1dir}" bash make.bash
+popd
+echo
+
+# stage 3: fourth stage bootstrap (go 1.20+ -> go 1.22+)
+test -e go && rm -rf go
 test -e "${godir}" && rm -rf "${godir}"
 tar -zxf "${godldir}/${gofile}"
 mv go "${godir}"
 pushd "${godir}/src/"
-boxecho "building stage2 go${gover} in ${PWD}"
-env GO_LDFLAGS='-extldflags "-static -s" -s -w' CGO_ENABLED=0 GOROOT_BOOTSTRAP="${cwbuild}/${gobs1dir}" bash make.bash
+boxecho "building stage3 go${gover} in ${PWD}"
+env GO_LDFLAGS='-extldflags "-static -s" -s -w' CGO_ENABLED=0 GOROOT_BOOTSTRAP="${cwbuild}/${gobs2dir}" bash make.bash
 popd
 
 popd
@@ -169,6 +187,7 @@ echo
 # final builds
 pushd "${rtdir}"
 for goarch in ${goarches[@]} ; do
+	boxecho "building final go${gover} for ${goarch} in ${PWD}"
 	goarchdir="${godir}-${goarch}"
 	goarchive="${cwtmp}/${goarchdir}.tar"
 	test -e go && rm -rf go
@@ -182,7 +201,6 @@ for goarch in ${goarches[@]} ; do
 	sed -i 's|"/etc/ssl/certs"|"/etc/ssl/certs","'"${cwtop}/etc/ssl/certs"'"|g' crypto/x509/root_linux.go
 	"${cwbuild}/${godir}/bin/gofmt" -w crypto/x509/root_linux.go
 	#diff -Naur crypto/x509/root_linux.go{.ORIG,} || true
-	boxecho "building final go${gover} for ${goarch} in ${PWD}"
 	env GO_LDFLAGS='-extldflags "-static -s" -s -w' CGO_ENABLED=0 GOROOT_BOOTSTRAP="${cwbuild}/${godir}" GOOS='linux' GOARCH="${goarch}" bash make.bash
 	popd
 	pushd "${goarchdir}"
@@ -210,3 +228,5 @@ for goarch in ${goarches[@]} ; do
 done
 popd
 echo
+
+# vim: set ft=bash:
