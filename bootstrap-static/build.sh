@@ -22,17 +22,17 @@ set -eu
 sname="${BASH_SOURCE[0]}"
 
 if [[ ! $(uname -m) =~ x86_64 ]] ; then
-	echo "${sname}: please run on amd64 (for now)" 1>&2
-	exit 1
+  echo "${sname}: please run on amd64 (for now)" 1>&2
+  exit 1
 fi
 
 # prerequisite programs
 prereqs=( 'curl' 'gcc' 'gzip' 'nproc' 'tar' 'xz' )
 for prereq in ${prereqs[@]} ; do
-	if ! $(hash "${prereq}" >/dev/null 2>&1) ; then
-		echo "${sname}: ${prereq} not found" 1>&2
-		exit 1
-	fi
+  if ! $(hash "${prereq}" >/dev/null 2>&1) ; then
+    echo "${sname}: ${prereq} not found" 1>&2
+    exit 1
+  fi
 done
 
 # curl options
@@ -40,8 +40,8 @@ copts="-k -L -O"
 
 # check for real xz, not busybox
 if ! `xz --version 2>&1 | grep -qi 'xz utils'` ; then
-	echo "${sname}: please install xz" 1>&2
-	exit 2
+  echo "${sname}: please install xz" 1>&2
+  exit 2
 fi
 
 # checksums
@@ -122,8 +122,8 @@ mkdir -p "${vartmp}"
 # download
 pushd "${godldir}"
 for url in "${gobs0url}" "${gobs1url}" "${gobs2url}" "${gourl}" ; do
-	boxecho "fetching ${url} in ${PWD}"
-	curl ${copts} "${url}"
+  boxecho "fetching ${url} in ${PWD}"
+  curl ${copts} "${url}"
 done
 
 # checksum
@@ -187,44 +187,44 @@ echo
 # final builds
 pushd "${rtdir}"
 for goarch in ${goarches[@]} ; do
-	boxecho "building final go${gover} for ${goarch} in ${PWD}"
-	goarchdir="${godir}-${goarch}"
-	goarchive="${cwtmp}/${goarchdir}.tar"
-	test -e go && rm -rf go
-	test -e "${goarchdir}" && rm -rf "${goarchdir}"
-	tar -zxf "${godldir}/${gofile}"
-	mv go "${goarchdir}"
-	pushd "${goarchdir}/src/"
-	boxecho "patching crypto/x509/root_linux.go with cert locations"
-	cat crypto/x509/root_linux.go > crypto/x509/root_linux.go.ORIG
-	sed -i 's|"/etc/ssl/cert.pem"|"/etc/ssl/cert.pem","'"${cwtop}/etc/ssl/cert.pem"'"|g' crypto/x509/root_linux.go
-	sed -i 's|"/etc/ssl/certs"|"/etc/ssl/certs","'"${cwtop}/etc/ssl/certs"'"|g' crypto/x509/root_linux.go
-	"${cwbuild}/${godir}/bin/gofmt" -w crypto/x509/root_linux.go
-	#diff -Naur crypto/x509/root_linux.go{.ORIG,} || true
-	env GO_LDFLAGS='-extldflags "-static -s" -s -w' CGO_ENABLED=0 GOROOT_BOOTSTRAP="${cwbuild}/${godir}" GOOS='linux' GOARCH="${goarch}" bash make.bash
-	popd
-	pushd "${goarchdir}"
-	rm -rf pkg/obj/go-build
-	rm -rf pkg/bootstrap
-	if [[ ! ${goarch} =~ amd64 ]] ; then
-		rm -rf pkg/tool/linux_amd64
-		rm -rf pkg/linux_amd64
-		rm -f bin/go{,fmt}
-		mv bin/linux_${goarch}/* bin/
-		rmdir bin/linux_${goarch}
-	fi
-	popd
-	boxecho "successfully built go${gover} for ${goarch}"
-	echo "archiving ${goarchdir} to ${goarchive}"
-	tar -cf "${goarchive}" "${goarchdir}/"
-	pushd "$(dirname ${goarchive})"
-	echo "using xz to compress ${goarchive} in ${PWD}"
-	rm -f "${goarchive}.xz"
-	xz --threads=$(nproc) -e -v -v "${goarchive}"
-	echo "storing SHA-256 sum to ${goarchive}.xz.sha256"
-	sha256sum "$(basename ${goarchive}.xz)" > "${goarchive}.xz.sha256"
-	popd
-	echo
+  boxecho "building final go${gover} for ${goarch} in ${PWD}"
+  goarchdir="${godir}-${goarch}"
+  goarchive="${cwtmp}/${goarchdir}.tar"
+  test -e go && rm -rf go
+  test -e "${goarchdir}" && rm -rf "${goarchdir}"
+  tar -zxf "${godldir}/${gofile}"
+  mv go "${goarchdir}"
+  pushd "${goarchdir}/src/"
+  boxecho "patching crypto/x509/root_linux.go with cert locations"
+  cat crypto/x509/root_linux.go > crypto/x509/root_linux.go.ORIG
+  sed -i 's|"/etc/ssl/cert.pem"|"/etc/ssl/cert.pem","'"${cwtop}/etc/ssl/cert.pem"'"|g' crypto/x509/root_linux.go
+  sed -i 's|"/etc/ssl/certs"|"/etc/ssl/certs","'"${cwtop}/etc/ssl/certs"'"|g' crypto/x509/root_linux.go
+  "${cwbuild}/${godir}/bin/gofmt" -w crypto/x509/root_linux.go
+  #diff -Naur crypto/x509/root_linux.go{.ORIG,} || true
+  env GO_LDFLAGS='-extldflags "-static -s" -s -w' CGO_ENABLED=0 GOROOT_BOOTSTRAP="${cwbuild}/${godir}" GOOS='linux' GOARCH="${goarch}" bash make.bash
+  popd
+  pushd "${goarchdir}"
+  rm -rf pkg/obj/go-build
+  rm -rf pkg/bootstrap
+  if [[ ! ${goarch} =~ amd64 ]] ; then
+    rm -rf pkg/tool/linux_amd64
+    rm -rf pkg/linux_amd64
+    rm -f bin/go{,fmt}
+    mv bin/linux_${goarch}/* bin/
+    rmdir bin/linux_${goarch}
+  fi
+  popd
+  boxecho "successfully built go${gover} for ${goarch}"
+  echo "archiving ${goarchdir} to ${goarchive}"
+  tar -cf "${goarchive}" "${goarchdir}/"
+  pushd "$(dirname ${goarchive})"
+  echo "using xz to compress ${goarchive} in ${PWD}"
+  rm -f "${goarchive}.xz"
+  xz --threads=$(nproc) -e -v -v "${goarchive}"
+  echo "storing SHA-256 sum to ${goarchive}.xz.sha256"
+  sha256sum "$(basename ${goarchive}.xz)" > "${goarchive}.xz.sha256"
+  popd
+  echo
 done
 popd
 echo
