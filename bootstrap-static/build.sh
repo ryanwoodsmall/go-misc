@@ -15,6 +15,7 @@
 # XXX - convert to using arrays/hashes with actual functions - arbitrary # of steps, 0->1->...->n
 # XXX - this downloads _every_ time, need to... not do that?
 # XXX - at some point it'll be go 1.4->1.17.3+->1.2x.x->1.3x.x(?)->2.x.x, would be good to be prepared
+# XXX - getting unweildy, need to functionalize bootstrap builds
 #
 
 set -eu
@@ -68,12 +69,19 @@ gobs2file="go${gobs2ver}.src.tar.gz"
 gobs2filesha256="71fb31606a1de48d129d591e8717a63e0c5565ffba09a24ea9f899a13214c34d"
 gofilesha256sums["${gobs2file}"]="${gobs2filesha256}"
 
+# go stage 3 bootstrap 1.22+ for go 1.24+
+gobs3ver="1.23.7"
+gobs3dir="go${gobs3ver}"
+gobs3file="go${gobs3ver}.src.tar.gz"
+gobs3filesha256="7cfabd46b73eb4c26b19d69515dd043d7183a6559acccd5cfdb25eb6b266a458"
+gofilesha256sums["${gobs3file}"]="${gobs3filesha256}"
+
 # go intermediate and final build verison
-: ${gover:="1.23.7"}
+: ${gover:="1.24.1"}
 gomajver="${gover%%.*}"
 gominver="${gover#*.}"
 gominver="${gominver%%.*}"
-: ${gofilesha256:="7cfabd46b73eb4c26b19d69515dd043d7183a6559acccd5cfdb25eb6b266a458"}
+: ${gofilesha256:="8244ebf46c65607db10222b5806aeb31c1fcf8979c1b6b12f60c677e9a3c0656"}
 godir="go${gover}"
 gofile="go${gover}.src.tar.gz"
 gofilesha256sums["${gofile}"]="${gofilesha256}"
@@ -83,6 +91,7 @@ gobaseurl="https://dl.google.com/go"
 gobs0url="${gobaseurl}/${gobs0file}"
 gobs1url="${gobaseurl}/${gobs1file}"
 gobs2url="${gobaseurl}/${gobs2file}"
+gobs3url="${gobaseurl}/${gobs3file}"
 gourl="${gobaseurl}/${gofile}"
 
 # architectures
@@ -121,7 +130,7 @@ mkdir -p "${vartmp}"
 
 # download
 pushd "${godldir}"
-for url in "${gobs0url}" "${gobs1url}" "${gobs2url}" "${gourl}" ; do
+for url in "${gobs0url}" "${gobs1url}" "${gobs2url}" "${gobs3url}" "${gourl}" ; do
   boxecho "fetching ${url} in ${PWD}"
   curl ${copts} "${url}"
 done
@@ -173,12 +182,23 @@ echo
 
 # stage 3: fourth stage bootstrap (go 1.20+ -> go 1.22+)
 test -e go && rm -rf go
+test -e "${gobs3dir}" && rm -rf "${gobs3dir}"
+tar -zxf "${godldir}/${gobs3file}"
+mv go "${gobs3dir}"
+pushd "${gobs3dir}/src/"
+boxecho "building stage3 go${gobs3ver} in ${PWD}"
+env GO_LDFLAGS='-extldflags "-static -s" -s -w' CGO_ENABLED=0 GOROOT_BOOTSTRAP="${cwbuild}/${gobs2dir}" bash make.bash
+popd
+echo
+
+# stage 4: fifth stage bootstrap (go 1.22+ -> go 1.24+)
+test -e go && rm -rf go
 test -e "${godir}" && rm -rf "${godir}"
 tar -zxf "${godldir}/${gofile}"
 mv go "${godir}"
 pushd "${godir}/src/"
-boxecho "building stage3 go${gover} in ${PWD}"
-env GO_LDFLAGS='-extldflags "-static -s" -s -w' CGO_ENABLED=0 GOROOT_BOOTSTRAP="${cwbuild}/${gobs2dir}" bash make.bash
+boxecho "building stage4 go${gover} in ${PWD}"
+env GO_LDFLAGS='-extldflags "-static -s" -s -w' CGO_ENABLED=0 GOROOT_BOOTSTRAP="${cwbuild}/${gobs3dir}" bash make.bash
 popd
 
 popd
