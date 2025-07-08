@@ -70,18 +70,18 @@ gobs2filesha256="71fb31606a1de48d129d591e8717a63e0c5565ffba09a24ea9f899a13214c34
 gofilesha256sums["${gobs2file}"]="${gobs2filesha256}"
 
 # go stage 3 bootstrap 1.22+ for go 1.24+
-gobs3ver="1.23.10"
+gobs3ver="1.23.11"
 gobs3dir="go${gobs3ver}"
 gobs3file="go${gobs3ver}.src.tar.gz"
-gobs3filesha256="800a7ae1bff179a227b653a2f644517c800443b8b4abf3273af5e1cb7113de59"
+gobs3filesha256="296381607a483a8a8667d7695331752f94a1f231c204e2527d2f22e1e3d1247d"
 gofilesha256sums["${gobs3file}"]="${gobs3filesha256}"
 
 # go intermediate and final build verison
-: ${gover:="1.24.4"}
+: ${gover:="1.24.5"}
 gomajver="${gover%%.*}"
 gominver="${gover#*.}"
 gominver="${gominver%%.*}"
-: ${gofilesha256:="5a86a83a31f9fa81490b8c5420ac384fd3d95a3e71fba665c7b3f95d1dfef2b4"}
+: ${gofilesha256:="74fdb09f2352e2b25b7943e56836c9b47363d28dec1c8b56c4a9570f30b8f59f"}
 godir="go${gover}"
 gofile="go${gover}.src.tar.gz"
 gofilesha256sums["${gofile}"]="${gofilesha256}"
