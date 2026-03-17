@@ -47,12 +47,16 @@ if ! `xz --version 2>&1 | grep -qi 'xz utils'` ; then
 fi
 
 # versions
+#
+# XXX - needs to be overridable by environment
+#
 declare -a govers
 govers+=( "1.4-bootstrap-20171003" )
 govers+=( "1.19.13" )
 govers+=( "1.21.13" )
 govers+=( "1.23.12" )
-govers+=( "1.25.7" )
+govers+=( "1.25.8" )
+govers+=( "1.26.1" )
 : ${gofinalver:="${govers[-1]}"}
 
 # files, urls
@@ -67,7 +71,8 @@ gofilesha256h["1.4-bootstrap-20171003"]="f4ff5b5eb3a3cae1c993723f3eab519c5bae188
 gofilesha256h["1.19.13"]="ccf36b53fb0024a017353c3ddb22c1f00bc7a8073c6aac79042da24ee34434d3"
 gofilesha256h["1.21.13"]="71fb31606a1de48d129d591e8717a63e0c5565ffba09a24ea9f899a13214c34d"
 gofilesha256h["1.23.12"]="e1cce9379a24e895714a412c7ddd157d2614d9edbe83a84449b6e1840b4f1226"
-gofilesha256h["1.25.7"]="178f2832820274b43e177d32f06a3ebb0129e427dd20a5e4c88df2c1763cf10a"
+gofilesha256h["1.25.8"]="e988d4a2446ac7fe3f6daa089a58e9936a52a381355adec1c8983230a8d6c59e"
+gofilesha256h["1.26.1"]="3172293d04b209dc1144698e7ba13f0477f6ba8c5ffd0be66c20fdbc9785dfbb"
 # 1.4 special handling
 gofileh['1.4-bootstrap-20171003']="${godirh['1.4-bootstrap-20171003']}.tar.gz"
 gofileurlh['1.4-bootstrap-20171003']="${godlbase}/${gofileh['1.4-bootstrap-20171003']}"
