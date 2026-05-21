@@ -55,8 +55,8 @@ govers+=( "1.4-bootstrap-20171003" )
 govers+=( "1.19.13" )
 govers+=( "1.21.13" )
 govers+=( "1.23.12" )
-govers+=( "1.25.9" )
-govers+=( "1.26.2" )
+govers+=( "1.25.10" )
+govers+=( "1.26.3" )
 : ${gofinalver:="${govers[-1]}"}
 
 # files, urls
@@ -71,8 +71,8 @@ gofilesha256h["1.4-bootstrap-20171003"]="f4ff5b5eb3a3cae1c993723f3eab519c5bae188
 gofilesha256h["1.19.13"]="ccf36b53fb0024a017353c3ddb22c1f00bc7a8073c6aac79042da24ee34434d3"
 gofilesha256h["1.21.13"]="71fb31606a1de48d129d591e8717a63e0c5565ffba09a24ea9f899a13214c34d"
 gofilesha256h["1.23.12"]="e1cce9379a24e895714a412c7ddd157d2614d9edbe83a84449b6e1840b4f1226"
-gofilesha256h["1.25.9"]="0ec9ef8ebcea097aac37decae9f09a7218b451cd96be7d6ed513d8e4bcf909cf"
-gofilesha256h["1.26.2"]="2e91ebb6947a96e9436fb2b3926a8802efe63a6d375dffec4f82aa9dbd6fd43b"
+gofilesha256h["1.25.10"]="20cf04a92e5af99748e341bc8996fa28090c9ac98765fa115ec5ddf41d7af41d"
+gofilesha256h["1.26.3"]="1c646875d0aa8799133184ed57cf79ff24bdefe8c8820470602a9d3d6d9192b8"
 # 1.4 special handling
 gofileh['1.4-bootstrap-20171003']="${godirh['1.4-bootstrap-20171003']}.tar.gz"
 gofileurlh['1.4-bootstrap-20171003']="${godlbase}/${gofileh['1.4-bootstrap-20171003']}"
